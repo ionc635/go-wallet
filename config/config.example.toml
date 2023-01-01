@@ -1,0 +1,6 @@
+[rpc]
+goerliAPI = ""
+mainnetAPI = ""
+
+[wallet]
+privateKey = ""
