@@ -10,5 +10,6 @@ func GetRouter() *gin.Engine {
 	router := gin.Default()
 	router.GET("/health", controller.Health)
 	router.POST("/mnemonics", controller.NewMnemonic)
+	router.POST("/wallets", controller.NewWallet)
 	return router
 }
