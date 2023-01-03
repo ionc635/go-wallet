@@ -5,7 +5,7 @@ import (
 
 	conf "lecture/go-wallet/config"
 
-	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/ethereum/go-ethereum/ethclient"
 )
 
 var config = conf.GetConfig("config/config.toml")
@@ -15,11 +15,12 @@ var (
 	MAINNET_API_KEY = config.Rpc.MainnetAPI
 )
 
-func NewRpcClient() *rpc.Client {
-	client, err := rpc.Dial(GOERLI_API_KEY)
+func NewRpcClient() *ethclient.Client {
+	client, err := ethclient.Dial(GOERLI_API_KEY)
 
 	if err != nil {
 		log.Fatalf("Could not connect to Infura: %v", err)
+
 	}
 
 	return client
