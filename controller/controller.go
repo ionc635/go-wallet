@@ -1,16 +1,15 @@
 package controller
 
 import (
-	"crypto/ecdsa"
+	"context"
 	"fmt"
 	"lecture/go-wallet/model"
 	"lecture/go-wallet/rpc"
-	"log"
 	"net/http"
 
 	conf "lecture/go-wallet/config"
 
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/gin-gonic/gin"
 	hdWallet "github.com/miguelmota/go-ethereum-hdwallet"
 )
@@ -19,6 +18,7 @@ var config = conf.GetConfig("config/config.toml")
 
 var (
 	PRIVATE_KEY = config.Wallet.PrivateKey
+	PUBLIC_KEY  = config.Wallet.PublicKey
 )
 
 func Health(c *gin.Context) {
@@ -62,43 +62,20 @@ func NewWallet(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, result)
 }
 
-// TODO: json: cannot unmarshal string into Go value of type controller.Balance 에러 해결
 func GetBalance(c *gin.Context) {
 	client := rpc.NewRpcClient()
 
-	privateKey, err := crypto.HexToECDSA(PRIVATE_KEY)
-	if err != nil {
-		log.Fatal(err)
-	}
-	publicKey := privateKey.Public()
+	account := common.HexToAddress(PUBLIC_KEY)
 
-	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
-	if !ok {
-		log.Fatal("error casting public key to ECDSA")
-	}
-
-	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
-
-	var balance Balance
-
-	err = client.Call(&balance, "eth_getBalance", fromAddress.String(), "latest")
+	balance, err := client.BalanceAt(context.Background(), account, nil)
 
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	fmt.Printf("Latest block: %v\n", balance.result)
-}
-
-// type Balance struct {
-// 	Jsonrpc string      `json:"jsonrpc"`
-// 	Id      json.Number `json:"id"`
-// 	Result  string      `json:"result"`
-// }
-
-type Balance struct {
-	jsonrpc string
-	id      int
-	result  string
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"msg":     "OK",
+		"balance": balance,
+	})
 }

@@ -11,6 +11,6 @@ func GetRouter() *gin.Engine {
 	router.GET("/health", controller.Health)
 	router.POST("/mnemonics", controller.NewMnemonic)
 	router.POST("/wallets", controller.NewWallet)
-	router.GET("/balance", controller.GetBalance)
+	router.GET("/balances", controller.GetBalance)
 	return router
 }
