@@ -4,3 +4,4 @@ mainnetAPI = ""
 
 [wallet]
 privateKey = ""
+publicKey = ""

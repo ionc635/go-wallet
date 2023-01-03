@@ -14,6 +14,7 @@ type Config struct {
 
 	Wallet struct {
 		PrivateKey string
+		PublicKey  string
 	}
 }
 
