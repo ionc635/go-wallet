@@ -6,6 +6,7 @@ import (
 	"lecture/go-wallet/model"
 	"lecture/go-wallet/rpc"
 	"net/http"
+	"regexp"
 
 	conf "lecture/go-wallet/config"
 
@@ -78,4 +79,28 @@ func GetBalance(c *gin.Context) {
 		"msg":     "OK",
 		"balance": balance,
 	})
+}
+
+func CheckWalletValid(c *gin.Context) {
+	var body model.CheckValidRequest
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	re := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
+
+	if !re.MatchString(body.Address) {
+		c.IndentedJSON(http.StatusOK, gin.H{
+			"msg":   "OK",
+			"valid": false,
+		})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"msg":   "OK",
+		"valid": true,
+	})
+	return
 }

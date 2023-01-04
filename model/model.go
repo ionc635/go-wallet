@@ -12,3 +12,7 @@ type NewWalletResponse struct {
 	PrivateKey string `json:"privateKey"`
 	Address    string `json:"address"`
 }
+
+type CheckValidRequest struct {
+	Address string `json:"address"`
+}
