@@ -1,6 +1,8 @@
 package model
 
-import "github.com/ethereum/go-ethereum/common"
+import (
+	"github.com/ethereum/go-ethereum/common"
+)
 
 type NewMnemonicResponse struct {
 	Mnemonic string `json:"mnemonic"`
@@ -21,5 +23,5 @@ type CheckValidRequest struct {
 
 type TransferETHRequest struct {
 	ToAddress common.Address `json:"toAddress"`
-	Amount int64 `json:"amount"`
+	Amount    int64          `json:"amount"`
 }

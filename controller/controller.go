@@ -51,11 +51,19 @@ func NewWallet(c *gin.Context) {
 
 	mnemonic := body.Mnemonic
 
-	seed, _ := hdWallet.NewSeedFromMnemonic(mnemonic)
-	wallet, _ := hdWallet.NewFromSeed(seed)
-	path := hdWallet.MustParseDerivationPath("m/44'/60'/0'/0/0")
+	wallet, _ := hdWallet.NewFromMnemonic(mnemonic)
+	numOfWallets := len(wallet.Accounts())
 
-	account, _ := wallet.Derive(path, false)
+	client := rpc.NewRpcClient()
+	// 이더리움 coin_type / main_net - 60, test_net - 1 /
+	var coinType int = 60
+	if chainId, _ := client.NetworkID(context.Background()); chainId != big.NewInt(1) {
+		coinType = 1
+	}
+
+	path := hdWallet.MustParseDerivationPath("m/44'/" + fmt.Sprintf("%v", coinType) + "'/0'/0/" + fmt.Sprintf("%v", numOfWallets))
+
+	account, _ := wallet.Derive(path, true)
 	privateKey, _ := wallet.PrivateKeyHex(account)
 
 	address := account.Address.Hex()
