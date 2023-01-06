@@ -2,15 +2,19 @@ package controller
 
 import (
 	"context"
+	"crypto/ecdsa"
 	"fmt"
+	conf "lecture/go-wallet/config"
 	"lecture/go-wallet/model"
 	"lecture/go-wallet/rpc"
+	"log"
+	"math/big"
 	"net/http"
 	"regexp"
 
-	conf "lecture/go-wallet/config"
-
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gin-gonic/gin"
 	hdWallet "github.com/miguelmota/go-ethereum-hdwallet"
 )
@@ -103,4 +107,60 @@ func CheckWalletValid(c *gin.Context) {
 		"valid": true,
 	})
 	return
+}
+
+func TransferETH(c *gin.Context) {
+	var body model.TransferETHRequest
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	privateKey, err := crypto.HexToECDSA(PRIVATE_KEY)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		log.Fatal("cannot assert type: publicKey is not of type *ecdsa.PublicKey")
+	}
+
+	address := crypto.PubkeyToAddress(*publicKeyECDSA)
+
+	client := rpc.NewRpcClient()
+	nonce, err := client.PendingNonceAt(context.Background(), address)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	value := big.NewInt(body.Amount)
+	gasLimit := uint64(21000)
+	gasPrice, err := client.SuggestGasPrice(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	tx := types.NewTransaction(nonce, body.ToAddress, value, gasLimit, gasPrice, nil)
+
+	chainId, err := client.NetworkID(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainId), privateKey)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = client.SendTransaction(context.Background(), signedTx)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"msg": "OK",
+		"tx":  signedTx.Hash().Hex(),
+	})
 }
