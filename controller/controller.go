@@ -142,6 +142,24 @@ func TransferETH(c *gin.Context) {
 		log.Fatal(err)
 	}
 
+	balance, err := client.BalanceAt(context.Background(), address, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	gasFee := new(big.Int)
+	totalAmount := new(big.Int)
+
+	gasFee.Mul(gasPrice, big.NewInt(int64(gasLimit)))
+	totalAmount.Add(value, gasFee)
+
+	if balance.Cmp(totalAmount) != 1 {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{
+			"msg": "insufficient funds for gas * price + value",
+		})
+		return
+	}
+
 	tx := types.NewTransaction(nonce, body.ToAddress, value, gasLimit, gasPrice, nil)
 
 	chainId, err := client.NetworkID(context.Background())
