@@ -13,5 +13,6 @@ func GetRouter() *gin.Engine {
 	router.POST("/wallets", controller.NewWallet)
 	router.GET("/balances", controller.GetBalance)
 	router.POST("/wallets/valid", controller.CheckWalletValid)
+	router.POST("transfer/eth", controller.TransferETH)
 	return router
 }

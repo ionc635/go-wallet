@@ -1,5 +1,9 @@
 package model
 
+import (
+	"github.com/ethereum/go-ethereum/common"
+)
+
 type NewMnemonicResponse struct {
 	Mnemonic string `json:"mnemonic"`
 }
@@ -15,4 +19,9 @@ type NewWalletResponse struct {
 
 type CheckValidRequest struct {
 	Address string `json:"address"`
+}
+
+type TransferETHRequest struct {
+	ToAddress common.Address `json:"toAddress"`
+	Amount    int64          `json:"amount"`
 }
