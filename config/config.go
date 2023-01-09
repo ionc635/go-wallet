@@ -16,6 +16,12 @@ type Config struct {
 		PrivateKey string
 		PublicKey  string
 	}
+
+	Etherscan struct {
+		GoerliAPI  string
+		MainnetAPI string
+		ApiKey     string
+	}
 }
 
 func GetConfig(fpath string) *Config {

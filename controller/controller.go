@@ -3,10 +3,13 @@ package controller
 import (
 	"context"
 	"crypto/ecdsa"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	conf "lecture/go-wallet/config"
 	"lecture/go-wallet/model"
 	"lecture/go-wallet/rpc"
+	"lecture/go-wallet/scan"
 	"log"
 	"math/big"
 	"net/http"
@@ -188,5 +191,33 @@ func TransferETH(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{
 		"msg": "OK",
 		"tx":  signedTx.Hash().Hex(),
+	})
+}
+
+func GetTransactions(c *gin.Context) {
+	url := "/api?module=account&action=txlist&address=" + fmt.Sprintf("%v", PUBLIC_KEY) + "&startblock=0&endblock=99999999&page=0&offset=100&sort=desc&apikey="
+
+	resp, err := scan.NewHttpRequest(url)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer resp.Body.Close()
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var response model.GetTransactions
+	if err = json.Unmarshal(data, &response); err != nil {
+		log.Fatal(err)
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"msg":    "OK",
+		"count":  len(response.Result),
+		"result": response,
 	})
 }
