@@ -14,7 +14,7 @@ type Config struct {
 
 	Wallet struct {
 		PrivateKey string
-		PublicKey  string
+		Address    string
 	}
 
 	Etherscan struct {

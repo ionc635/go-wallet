@@ -26,7 +26,7 @@ var config = conf.GetConfig("config/config.toml")
 
 var (
 	PRIVATE_KEY = config.Wallet.PrivateKey
-	PUBLIC_KEY  = config.Wallet.PublicKey
+	ADDRESS     = config.Wallet.Address
 )
 
 func Health(c *gin.Context) {
@@ -42,7 +42,10 @@ func NewMnemonic(c *gin.Context) {
 	var result model.NewMnemonicResponse
 	result.Mnemonic = mnemonic
 
-	c.IndentedJSON(http.StatusOK, result)
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"msg":    "OK",
+		"result": result,
+	})
 }
 
 func NewWallet(c *gin.Context) {
@@ -75,13 +78,16 @@ func NewWallet(c *gin.Context) {
 	result.PrivateKey = privateKey
 	result.Address = address
 
-	c.IndentedJSON(http.StatusOK, result)
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"msg":    "OK",
+		"result": result,
+	})
 }
 
 func GetBalance(c *gin.Context) {
 	client := rpc.NewRpcClient()
 
-	account := common.HexToAddress(PUBLIC_KEY)
+	account := common.HexToAddress(ADDRESS)
 
 	balance, err := client.BalanceAt(context.Background(), account, nil)
 
@@ -117,7 +123,6 @@ func CheckWalletValid(c *gin.Context) {
 		"msg":   "OK",
 		"valid": true,
 	})
-	return
 }
 
 func TransferETH(c *gin.Context) {
@@ -195,7 +200,7 @@ func TransferETH(c *gin.Context) {
 }
 
 func GetTransactions(c *gin.Context) {
-	url := "/api?module=account&action=txlist&address=" + fmt.Sprintf("%v", PUBLIC_KEY) + "&startblock=0&endblock=99999999&page=0&offset=100&sort=desc&apikey="
+	url := "/api?module=account&action=txlist&address=" + fmt.Sprintf("%v", ADDRESS) + "&startblock=0&endblock=99999999&page=0&offset=100&sort=desc&apikey="
 
 	resp, err := scan.NewHttpRequest(url)
 
