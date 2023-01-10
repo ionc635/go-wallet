@@ -14,7 +14,13 @@ type Config struct {
 
 	Wallet struct {
 		PrivateKey string
-		PublicKey  string
+		Address    string
+	}
+
+	Etherscan struct {
+		GoerliAPI  string
+		MainnetAPI string
+		ApiKey     string
 	}
 }
 

@@ -3,10 +3,13 @@ package controller
 import (
 	"context"
 	"crypto/ecdsa"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	conf "lecture/go-wallet/config"
 	"lecture/go-wallet/model"
 	"lecture/go-wallet/rpc"
+	"lecture/go-wallet/scan"
 	"log"
 	"math/big"
 	"net/http"
@@ -23,7 +26,7 @@ var config = conf.GetConfig("config/config.toml")
 
 var (
 	PRIVATE_KEY = config.Wallet.PrivateKey
-	PUBLIC_KEY  = config.Wallet.PublicKey
+	ADDRESS     = config.Wallet.Address
 )
 
 func Health(c *gin.Context) {
@@ -39,7 +42,10 @@ func NewMnemonic(c *gin.Context) {
 	var result model.NewMnemonicResponse
 	result.Mnemonic = mnemonic
 
-	c.IndentedJSON(http.StatusOK, result)
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"msg":    "OK",
+		"result": result,
+	})
 }
 
 func NewWallet(c *gin.Context) {
@@ -72,13 +78,16 @@ func NewWallet(c *gin.Context) {
 	result.PrivateKey = privateKey
 	result.Address = address
 
-	c.IndentedJSON(http.StatusOK, result)
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"msg":    "OK",
+		"result": result,
+	})
 }
 
 func GetBalance(c *gin.Context) {
 	client := rpc.NewRpcClient()
 
-	account := common.HexToAddress(PUBLIC_KEY)
+	account := common.HexToAddress(ADDRESS)
 
 	balance, err := client.BalanceAt(context.Background(), account, nil)
 
@@ -114,7 +123,6 @@ func CheckWalletValid(c *gin.Context) {
 		"msg":   "OK",
 		"valid": true,
 	})
-	return
 }
 
 func TransferETH(c *gin.Context) {
@@ -188,5 +196,73 @@ func TransferETH(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{
 		"msg": "OK",
 		"tx":  signedTx.Hash().Hex(),
+	})
+}
+
+func GetTransactions(c *gin.Context) {
+	url := "/api?module=account&action=txlist&address=" + fmt.Sprintf("%v", ADDRESS) + "&startblock=0&endblock=99999999&page=0&offset=100&sort=desc&apikey="
+
+	resp, err := scan.NewHttpRequest(url)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer resp.Body.Close()
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var response model.GetTransactions
+	if err = json.Unmarshal(data, &response); err != nil {
+		log.Fatal(err)
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"msg":    "OK",
+		"count":  len(response.Result),
+		"result": response,
+	})
+}
+
+func GetTransactionStatus(c *gin.Context) {
+	var body model.GetTransactionStatusRequest
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	url := "/api?module=transaction&action=getstatus&txhash=" + fmt.Sprintf("%v", body.Hash) + "&apikey="
+
+	resp, err := scan.NewHttpRequest(url)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer resp.Body.Close()
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var response model.GetTransactionStatus
+	if err = json.Unmarshal(data, &response); err != nil {
+		log.Fatal(err)
+	}
+
+	if response.Result.IsError != "0" {
+		c.IndentedJSON(http.StatusOK, gin.H{
+			"msg":    "Fail",
+			"result": response.Result.ErrDescription,
+		})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"msg": "OK",
 	})
 }

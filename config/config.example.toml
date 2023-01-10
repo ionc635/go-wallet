@@ -5,3 +5,8 @@ mainnetAPI = ""
 [wallet]
 privateKey = ""
 publicKey = ""
+
+[etherscan]
+goerliAPI = ""
+mainnetAPI = ""
+ApiKey = ""
