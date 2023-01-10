@@ -65,21 +65,3 @@ type GetTransactionStatus struct {
 		ErrDescription string `json:"errDescription"`
 	}
 }
-
-// type TxData interface {
-// 	txType() byte // returns the type ID
-// 	copy() TxData // creates a deep copy and initializes all fields
-
-// 	chainID() *big.Int
-// 	data() []byte
-// 	gas() uint64
-// 	gasPrice() *big.Int
-// 	gasTipCap() *big.Int
-// 	gasFeeCap() *big.Int
-// 	value() *big.Int
-// 	nonce() uint64
-// 	to() *common.Address
-
-// 	rawSignatureValues() (v, r, s *big.Int)
-// 	setSignatureValues(chainID, v, r, s *big.Int)
-// }
