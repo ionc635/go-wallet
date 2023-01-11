@@ -4,8 +4,10 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-type NewMnemonicResponse struct {
+type NewMnemonicAndWalletResponse struct {
 	Mnemonic string `json:"mnemonic"`
+	Address  string `json:"address"`
+	Mark     string `json:"mark"`
 }
 
 type CreateWalletRequest struct {
@@ -64,4 +66,8 @@ type GetTransactionStatus struct {
 		IsError        string `json:"isError"`
 		ErrDescription string `json:"errDescription"`
 	}
+}
+
+type NewMnemonicRequest struct {
+	Password string `json:"password"`
 }
