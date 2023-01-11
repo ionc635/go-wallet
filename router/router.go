@@ -11,7 +11,7 @@ func GetRouter() *gin.Engine {
 	router.GET("/health", controller.Health)
 	router.POST("/mnemonics", controller.NewMnemonicAndWallet)
 	router.POST("/signin/password", controller.SigninFromPassword)
-	// router.POST("/signin/mnemonic", controller.SigninFromMnemonic)
+	router.POST("/signin/mnemonic", controller.SigninFromMnemonic)
 	router.POST("/wallets", controller.NewWallet)
 	router.GET("/balances", controller.GetBalance)
 	router.POST("/wallets/valid", controller.CheckWalletValid)

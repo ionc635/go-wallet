@@ -142,6 +142,78 @@ func SigninFromPassword(c *gin.Context) {
 	})
 }
 
+func SigninFromMnemonic(c *gin.Context) {
+	var body model.SigninFromMnemonicRequest
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	wallet, err := hdWallet.NewFromMnemonic(body.Mnemonic)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{
+			"msg": "mnemonic is not valid",
+		})
+	}
+
+	client := rpc.NewRpcClient()
+	// 이더리움 coin_type / main_net - 60, test_net - 1 /
+	var coinType int = 60
+	if chainId, _ := client.NetworkID(context.Background()); chainId != big.NewInt(1) {
+		coinType = 1
+	}
+
+	path := hdWallet.MustParseDerivationPath("m/44'/" + fmt.Sprintf("%v", coinType) + "'/0'/0/0")
+
+	account, _ := wallet.Derive(path, true)
+
+	address := account.Address.Hex()
+
+	db := db.GetConnector()
+
+	var keyId int
+	err = db.QueryRow("SELECT (keyId) FROM test_db.address WHERE address = ?", address).Scan(&keyId)
+
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{
+			"msg": "mnemonic is not valid",
+		})
+	}
+
+	var data string
+	var resultAddress []string
+	rows, err := db.Query("SELECT address FROM test_db.address WHERE keyId = ?", keyId)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		if err := rows.Scan(&data); err != nil {
+			log.Fatal(err)
+		}
+
+		resultAddress = append(resultAddress, data)
+	}
+
+	var mark string
+	err = db.QueryRow("SELECT (mark) FROM test_db.key WHERE id = ?", keyId).Scan(&mark)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var response model.SigninFromMnemonicResponse
+	response.Address = resultAddress
+	response.Mark = mark
+
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"msg":    "OK",
+		"result": response,
+	})
+}
+
 func NewWallet(c *gin.Context) {
 	var body model.CreateWalletRequest
 	if err := c.ShouldBindJSON(&body); err != nil {
