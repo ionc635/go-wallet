@@ -37,6 +37,7 @@ func Health(c *gin.Context) {
 
 func NewMnemonic(c *gin.Context) {
 	entropy, _ := hdWallet.NewEntropy(256)
+
 	mnemonic, _ := hdWallet.NewMnemonicFromEntropy(entropy)
 
 	var result model.NewMnemonicResponse
@@ -234,35 +235,13 @@ func GetTransactionStatus(c *gin.Context) {
 		return
 	}
 
-	url := "/api?module=transaction&action=getstatus&txhash=" + fmt.Sprintf("%v", body.Hash) + "&apikey="
-
-	resp, err := scan.NewHttpRequest(url)
-
-	if err != nil {
+	client := rpc.NewRpcClient()
+	if _, isPending, err := client.TransactionByHash(context.Background(), body.Hash); err != nil {
 		log.Fatal(err)
-	}
-
-	defer resp.Body.Close()
-
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var response model.GetTransactionStatus
-	if err = json.Unmarshal(data, &response); err != nil {
-		log.Fatal(err)
-	}
-
-	if response.Result.IsError != "0" {
+	} else {
 		c.IndentedJSON(http.StatusOK, gin.H{
-			"msg":    "Fail",
-			"result": response.Result.ErrDescription,
+			"msg":       "OK",
+			"isPending": isPending,
 		})
-		return
 	}
-
-	c.IndentedJSON(http.StatusOK, gin.H{
-		"msg": "OK",
-	})
 }
