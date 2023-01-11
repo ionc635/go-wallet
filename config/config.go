@@ -22,6 +22,13 @@ type Config struct {
 		MainnetAPI string
 		ApiKey     string
 	}
+
+	Mysql struct {
+		User   string
+		Passwd string
+		Addr   string
+		DBName string
+	}
 }
 
 func GetConfig(fpath string) *Config {

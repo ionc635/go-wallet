@@ -10,3 +10,9 @@ publicKey = ""
 goerliAPI = ""
 mainnetAPI = ""
 ApiKey = ""
+
+[mysql]
+User = ""
+Passwd = ""
+Addr = ""
+DBName = ""
