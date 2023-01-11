@@ -95,6 +95,53 @@ func NewMnemonicAndWallet(c *gin.Context) {
 	})
 }
 
+func SigninFromPassword(c *gin.Context) {
+	var body model.SigninFromPasswordRequest
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	password := body.Password
+	hash := sha256.New()
+	hash.Write([]byte(password))
+
+	encryptdPw := hex.EncodeToString(hash.Sum(nil))
+
+	db := db.GetConnector()
+	var id int
+	err := db.QueryRow("SELECT (id) FROM test_db.key WHERE password = ? AND mark = ?", encryptdPw, body.Mark).Scan(&id)
+
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{
+			"msg": "password is not vaild",
+		})
+	}
+
+	var data string
+	var address []string
+	rows, err := db.Query("SELECT address FROM test_db.address WHERE keyId = ?", id)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		if err := rows.Scan(&data); err != nil {
+			log.Fatal(err)
+		}
+
+		address = append(address, data)
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"msg":    "OK",
+		"result": address,
+	})
+}
+
 func NewWallet(c *gin.Context) {
 	var body model.CreateWalletRequest
 	if err := c.ShouldBindJSON(&body); err != nil {

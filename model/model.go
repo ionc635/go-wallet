@@ -71,3 +71,8 @@ type GetTransactionStatus struct {
 type NewMnemonicRequest struct {
 	Password string `json:"password"`
 }
+
+type SigninFromPasswordRequest struct {
+	Password string `json:"password"`
+	Mark     string `json:"mark"`
+}
