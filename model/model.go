@@ -88,3 +88,7 @@ type SigninFromMnemonicResponse struct {
 type SigninFromPasswordResponse struct {
 	Address []string `json:"address"`
 }
+
+type AddWalletResponse struct {
+	Address string `json:"address"`
+}

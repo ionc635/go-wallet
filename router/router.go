@@ -10,11 +10,18 @@ import (
 
 func GetRouter() *gin.Engine {
 	router := gin.Default()
+	// 헬스 체크
 	router.GET("/health", controller.Health)
+	// 최초 니모닉 생성
 	router.POST("/mnemonics", controller.NewMnemonicAndWallet)
+	// 패스워드 로그인
 	router.POST("/signin/password", liteAuth(), controller.SigninFromPassword)
+	// 니모닉 로그인
 	router.POST("/signin/mnemonic", controller.SigninFromMnemonic)
-	router.POST("/wallets", controller.NewWallet)
+	// 지갑 추가
+	router.POST("/wallets", liteAuth(), controller.AddWallet)
+
+	// router.POST("/wallets", controller.NewWallet)
 	router.GET("/balances", controller.GetBalance)
 	router.POST("/wallets/valid", controller.CheckWalletValid)
 	router.POST("transfer/eth", controller.TransferETH)

@@ -237,6 +237,66 @@ func SigninFromMnemonic(c *gin.Context) {
 	})
 }
 
+func AddWallet(c *gin.Context) {
+	mark := c.Param("mark")
+
+	// 니모닉 조회
+	db := db.GetConnector()
+	var mnemonic string
+	var keyId string
+	db.QueryRow("SELECT id, AES_DECRYPT(unhex(mnemonic), ?) FROM test_db.key WHERE mark = ?", mark, mark).Scan(&keyId, &mnemonic)
+
+	// coinType 확인
+	client := rpc.NewRpcClient()
+	// 이더리움 coin_type / main_net - 60, test_net - 1 /
+	var coinType int = 60
+	if chainId, _ := client.NetworkID(context.Background()); chainId != big.NewInt(1) {
+		coinType = 1
+	}
+
+	// 해당 keyId로 몇번째 지갑인지 확인
+	rows, err := db.Query("SELECT COUNT(*) FROM test_db.address WHERE keyId = ?", keyId)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer rows.Close()
+
+	var count int
+
+	for rows.Next() {
+		if err := rows.Scan(&count); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	// 지갑 생성
+	wallet, _ := hdWallet.NewFromMnemonic(mnemonic)
+
+	// BIP44
+	path := hdWallet.MustParseDerivationPath("m/44'/" + fmt.Sprintf("%v", coinType) + "'/0'/0/" + fmt.Sprintf("%v", count))
+	account, _ := wallet.Derive(path, true)
+
+	// privateKey, address 생성
+	privateKey, _ := wallet.PrivateKeyHex(account)
+	address := account.Address.Hex()
+
+	// DB 저장
+	_, err = db.Exec("INSERT INTO test_db.address (address, privateKey, keyId, level, type) VALUES (?, hex(aes_encrypt(?, ?)), ?, ?, ?)", address, privateKey, mark, keyId, count, coinType)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var result model.AddWalletResponse
+	result.Address = address
+
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"msg":    "OK",
+		"result": result,
+	})
+}
+
 func NewWallet(c *gin.Context) {
 	var body model.CreateWalletRequest
 	if err := c.ShouldBindJSON(&body); err != nil {
