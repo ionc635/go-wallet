@@ -1,21 +1,27 @@
 package jwt
 
 import (
+	"errors"
 	"log"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/dgrijalva/jwt-go/v4"
 )
 
-type Claims struct {
+type AuthTokenClaims struct {
 	Key string `json:"key"`
+	jwt.StandardClaims
 }
 
 func CreateToken(key string) string {
-	token := jwt.New(jwt.SigningMethodHS256)
-	claims := token.Claims.(jwt.MapClaims)
-	claims["id"] = key
-	claims["exp"] = time.Now().Add(time.Minute * 30).Unix()
+	claims := AuthTokenClaims{
+		Key: key,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: jwt.At(time.Now().Add(time.Hour * 1000000)),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &claims)
 	accessToken, err := token.SignedString([]byte("asdgjkl;asjd;lf"))
 	if err != nil {
 		log.Fatal(err)
@@ -23,5 +29,19 @@ func CreateToken(key string) string {
 	return accessToken
 }
 
-func TokenVerfy(token string) {
+func VerfyToken(token string) string {
+	claims := AuthTokenClaims{}
+	key := func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			ErrUnexpectedSigningMethod := errors.New("unexpected signing method")
+			return nil, ErrUnexpectedSigningMethod
+		}
+		return []byte("asdgjkl;asjd;lf"), nil
+	}
+
+	_, err := jwt.ParseWithClaims(token, &claims, key)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return claims.Key
 }
