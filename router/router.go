@@ -29,11 +29,8 @@ func GetRouter() *gin.Engine {
 	// 지갑 상세 조회
 	r.GET("/wallets/:address", liteAuth(), controller.GetWallet)
 
-	// router.POST("/wallets", controller.NewWallet)
-	// router.GET("/balances", controller.GetBalance)
 	// router.POST("/wallets/valid", controller.CheckWalletValid)
 	// router.POST("transfer/eth", controller.TransferETH)
-	// router.GET("transactions", controller.GetTransactions)
 	// router.GET("transactions/status", controller.GetTransactionStatus)
 	return r
 }

@@ -422,60 +422,6 @@ func GetWallet(c *gin.Context) {
 	})
 }
 
-func NewWallet(c *gin.Context) {
-	var body model.CreateWalletRequest
-	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	mnemonic := body.Mnemonic
-
-	wallet, _ := hdWallet.NewFromMnemonic(mnemonic)
-	numOfWallets := len(wallet.Accounts())
-
-	client := rpc.NewRpcClient()
-	// 이더리움 coin_type / main_net - 60, test_net - 1 /
-	var coinType int = 60
-	if chainId, _ := client.NetworkID(context.Background()); chainId != big.NewInt(1) {
-		coinType = 1
-	}
-
-	path := hdWallet.MustParseDerivationPath("m/44'/" + fmt.Sprintf("%v", coinType) + "'/0'/0/" + fmt.Sprintf("%v", numOfWallets))
-
-	account, _ := wallet.Derive(path, true)
-	privateKey, _ := wallet.PrivateKeyHex(account)
-
-	address := account.Address.Hex()
-
-	var result model.NewWalletResponse
-	result.PrivateKey = privateKey
-	result.Address = address
-
-	c.IndentedJSON(http.StatusOK, gin.H{
-		"msg":    "OK",
-		"result": result,
-	})
-}
-
-func GetBalance(c *gin.Context) {
-	client := rpc.NewRpcClient()
-
-	account := common.HexToAddress(ADDRESS)
-
-	balance, err := client.BalanceAt(context.Background(), account, nil)
-
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	c.IndentedJSON(http.StatusOK, gin.H{
-		"msg":     "OK",
-		"balance": balance,
-	})
-}
-
 func CheckWalletValid(c *gin.Context) {
 	var body model.CheckValidRequest
 	if err := c.ShouldBindJSON(&body); err != nil {
@@ -570,34 +516,6 @@ func TransferETH(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{
 		"msg": "OK",
 		"tx":  signedTx.Hash().Hex(),
-	})
-}
-
-func GetTransactions(c *gin.Context) {
-	url := "/api?module=account&action=txlist&address=" + fmt.Sprintf("%v", ADDRESS) + "&startblock=0&endblock=99999999&page=0&offset=100&sort=desc&apikey="
-
-	resp, err := scan.NewHttpRequest(url)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer resp.Body.Close()
-
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var response model.GetTransactions
-	if err = json.Unmarshal(data, &response); err != nil {
-		log.Fatal(err)
-	}
-
-	c.IndentedJSON(http.StatusOK, gin.H{
-		"msg":    "OK",
-		"count":  len(response.Result),
-		"result": response,
 	})
 }
 
