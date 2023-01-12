@@ -96,7 +96,6 @@ func NewMnemonicAndWallet(c *gin.Context) {
 
 	// 토큰 생성
 	token := jwt.CreateToken(mark)
-	fmt.Println(mark)
 
 	var result model.NewMnemonicAndWalletResponse
 	result.Mnemonic = mnemonic

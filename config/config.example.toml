@@ -16,3 +16,7 @@ User = ""
 Passwd = ""
 Addr = ""
 DBName = ""
+
+[jwt]
+privateKey = ""
+expires = ""

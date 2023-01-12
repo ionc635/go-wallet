@@ -29,6 +29,11 @@ type Config struct {
 		Addr   string
 		DBName string
 	}
+
+	Jwt struct {
+		PrivateKey string
+		Expires    int
+	}
 }
 
 func GetConfig(fpath string) *Config {
