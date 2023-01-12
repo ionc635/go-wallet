@@ -335,6 +335,45 @@ func RemoveWallet(c *gin.Context) {
 	})
 }
 
+func GetWallets(c *gin.Context) {
+	mark := c.Param("mark")
+
+	// mark로 id 조회
+	db := db.GetConnector()
+	var id int
+	err := db.QueryRow("SELECT (id) FROM test_db.key WHERE mark = ?", mark).Scan(&id)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// 해당 keyId로 매핑되어 있는 타 주소 조회
+	var data string
+	var address []string
+	rows, err := db.Query("SELECT address FROM test_db.address WHERE keyId = ? AND isUsed = true", id)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		if err := rows.Scan(&data); err != nil {
+			log.Fatal(err)
+		}
+
+		address = append(address, data)
+	}
+
+	var result model.GetWalletsResponse
+	result.Address = address
+
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"msg":    "OK",
+		"result": result,
+	})
+}
+
 func NewWallet(c *gin.Context) {
 	var body model.CreateWalletRequest
 	if err := c.ShouldBindJSON(&body); err != nil {

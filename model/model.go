@@ -97,3 +97,7 @@ type RemoveWalletRequest struct {
 	Address  string `json:"address"`
 	Password string `json:"password"`
 }
+
+type GetWalletsResponse struct {
+	Address []string `json:"address"`
+}
