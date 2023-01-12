@@ -137,7 +137,7 @@ func SigninFromPassword(c *gin.Context) {
 	// Address 조회
 	var data string
 	var address []string
-	rows, err := db.Query("SELECT address FROM test_db.address WHERE keyId = ?", id)
+	rows, err := db.Query("SELECT address FROM test_db.address WHERE keyId = ? AND isUsed = true", id)
 
 	if err != nil {
 		log.Fatal(err)
@@ -204,7 +204,7 @@ func SigninFromMnemonic(c *gin.Context) {
 	// 해당 keyId로 매핑되어 있는 타 주소 조회
 	var data string
 	var resultAddress []string
-	rows, err := db.Query("SELECT address FROM test_db.address WHERE keyId = ?", keyId)
+	rows, err := db.Query("SELECT address FROM test_db.address WHERE keyId = ? AND isUsed = true", keyId)
 
 	if err != nil {
 		log.Fatal(err)
