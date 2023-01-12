@@ -169,6 +169,7 @@ func SigninFromMnemonic(c *gin.Context) {
 		return
 	}
 
+	// 니모닉으로부터 지갑 생성
 	wallet, err := hdWallet.NewFromMnemonic(body.Mnemonic)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{
@@ -176,6 +177,7 @@ func SigninFromMnemonic(c *gin.Context) {
 		})
 	}
 
+	// coinType 확인
 	client := rpc.NewRpcClient()
 	// 이더리움 coin_type / main_net - 60, test_net - 1 /
 	var coinType int = 60
@@ -183,14 +185,13 @@ func SigninFromMnemonic(c *gin.Context) {
 		coinType = 1
 	}
 
+	// 0번째 path로 Address 생성
 	path := hdWallet.MustParseDerivationPath("m/44'/" + fmt.Sprintf("%v", coinType) + "'/0'/0/0")
-
 	account, _ := wallet.Derive(path, true)
-
 	address := account.Address.Hex()
 
+	// 해당 Address로 keyId 조회
 	db := db.GetConnector()
-
 	var keyId int
 	err = db.QueryRow("SELECT (keyId) FROM test_db.address WHERE address = ?", address).Scan(&keyId)
 
@@ -200,6 +201,7 @@ func SigninFromMnemonic(c *gin.Context) {
 		})
 	}
 
+	// 해당 keyId로 매핑되어 있는 타 주소 조회
 	var data string
 	var resultAddress []string
 	rows, err := db.Query("SELECT address FROM test_db.address WHERE keyId = ?", keyId)
@@ -218,19 +220,20 @@ func SigninFromMnemonic(c *gin.Context) {
 		resultAddress = append(resultAddress, data)
 	}
 
+	// mark 조회
 	var mark string
 	err = db.QueryRow("SELECT (mark) FROM test_db.key WHERE id = ?", keyId).Scan(&mark)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var response model.SigninFromMnemonicResponse
-	response.Address = resultAddress
-	response.Mark = mark
+	var result model.SigninFromMnemonicResponse
+	result.Address = resultAddress
+	result.Mark = mark
 
 	c.IndentedJSON(http.StatusOK, gin.H{
 		"msg":    "OK",
-		"result": response,
+		"result": result,
 	})
 }
 
