@@ -1,20 +1,15 @@
 package model
 
 import (
+	"math/big"
+
 	"github.com/ethereum/go-ethereum/common"
 )
 
-type NewMnemonicResponse struct {
+type NewMnemonicAndWalletResponse struct {
 	Mnemonic string `json:"mnemonic"`
-}
-
-type CreateWalletRequest struct {
-	Mnemonic string `json:"mnemonic" binding:"required"`
-}
-
-type NewWalletResponse struct {
-	PrivateKey string `json:"privateKey"`
-	Address    string `json:"address"`
+	Address  string `json:"address"`
+	Token    string `json:"token"`
 }
 
 type CheckValidRequest struct {
@@ -64,4 +59,43 @@ type GetTransactionStatus struct {
 		IsError        string `json:"isError"`
 		ErrDescription string `json:"errDescription"`
 	}
+}
+
+type NewMnemonicRequest struct {
+	Password string `json:"password"`
+}
+
+type SigninFromPasswordRequest struct {
+	Password string `json:"password"`
+}
+
+type SigninFromMnemonicRequest struct {
+	Mnemonic string `json:"mnemonic"`
+}
+
+type SigninFromMnemonicResponse struct {
+	Address []string `json:"address"`
+	Mark    string   `json:"mark"`
+}
+
+type SigninFromPasswordResponse struct {
+	Address []string `json:"address"`
+}
+
+type AddWalletResponse struct {
+	Address string `json:"address"`
+}
+
+type RemoveWalletRequest struct {
+	Address  string `json:"address"`
+	Password string `json:"password"`
+}
+
+type GetWalletsResponse struct {
+	Address []string `json:"address"`
+}
+
+type GetWalletResponse struct {
+	Balance      *big.Int        `json:"balance"`
+	Transactions GetTransactions `json:"transactions"`
 }
