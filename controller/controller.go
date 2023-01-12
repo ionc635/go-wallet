@@ -297,6 +297,44 @@ func AddWallet(c *gin.Context) {
 	})
 }
 
+func RemoveWallet(c *gin.Context) {
+	var body model.RemoveWalletRequest
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	mark := c.Param("mark")
+
+	// 비밀번호 암호화
+	password := body.Password
+	hash := sha256.New()
+	hash.Write([]byte(password))
+	encryptdPw := hex.EncodeToString(hash.Sum(nil))
+
+	// 비밀번호와 mark가 일치하는지 확인
+	db := db.GetConnector()
+	var id int
+	err := db.QueryRow("SELECT (id) FROM test_db.key WHERE password = ? AND mark = ?", encryptdPw, mark).Scan(&id)
+
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{
+			"msg": "password is not vaild",
+		})
+		return
+	}
+
+	// isUsed 상태 값 false로 변경
+	_, err = db.Exec("UPDATE test_db.address SET isUsed = false WHERE address = ?", body.Address)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"msg": "OK",
+	})
+}
+
 func NewWallet(c *gin.Context) {
 	var body model.CreateWalletRequest
 	if err := c.ShouldBindJSON(&body); err != nil {

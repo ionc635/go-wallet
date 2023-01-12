@@ -20,7 +20,8 @@ func GetRouter() *gin.Engine {
 	router.POST("/signin/mnemonic", controller.SigninFromMnemonic)
 	// 지갑 추가
 	router.POST("/wallets", liteAuth(), controller.AddWallet)
-
+	// 지갑 삭제
+	router.DELETE("/wallets", liteAuth(), controller.RemoveWallet)
 	// router.POST("/wallets", controller.NewWallet)
 	router.GET("/balances", controller.GetBalance)
 	router.POST("/wallets/valid", controller.CheckWalletValid)

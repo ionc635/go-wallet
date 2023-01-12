@@ -92,3 +92,8 @@ type SigninFromPasswordResponse struct {
 type AddWalletResponse struct {
 	Address string `json:"address"`
 }
+
+type RemoveWalletRequest struct {
+	Address  string `json:"address"`
+	Password string `json:"password"`
+}
