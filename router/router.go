@@ -26,6 +26,8 @@ func GetRouter() *gin.Engine {
 	r.DELETE("/wallets", liteAuth(), controller.RemoveWallet)
 	// 지갑 전체 조회
 	r.GET("/wallets", liteAuth(), controller.GetWallets)
+	// 지갑 상세 조회
+	r.GET("/wallets/:address", liteAuth(), controller.GetWallet)
 
 	// router.POST("/wallets", controller.NewWallet)
 	// router.GET("/balances", controller.GetBalance)

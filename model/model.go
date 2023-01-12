@@ -1,6 +1,8 @@
 package model
 
 import (
+	"math/big"
+
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -100,4 +102,9 @@ type RemoveWalletRequest struct {
 
 type GetWalletsResponse struct {
 	Address []string `json:"address"`
+}
+
+type GetWalletResponse struct {
+	Balance      *big.Int        `json:"balance"`
+	Transactions GetTransactions `json:"transactions"`
 }

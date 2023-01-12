@@ -374,6 +374,54 @@ func GetWallets(c *gin.Context) {
 	})
 }
 
+func GetWallet(c *gin.Context) {
+	address := c.Param("address")
+
+	// RPC 연결
+	client := rpc.NewRpcClient()
+
+	account := common.HexToAddress(address)
+
+	// 밸런즈 조회
+	balance, err := client.BalanceAt(context.Background(), account, nil)
+
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	// 트랜잭션 조회 API
+	url := "/api?module=account&action=txlist&address=" + fmt.Sprintf("%v", address) + "&startblock=0&endblock=99999999&page=0&offset=9999&sort=desc&apikey="
+
+	// 이더스캔 연결
+	resp, err := scan.NewHttpRequest(url)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer resp.Body.Close()
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var transactions model.GetTransactions
+	if err = json.Unmarshal(data, &transactions); err != nil {
+		log.Fatal(err)
+	}
+
+	var result model.GetWalletResponse
+	result.Balance = balance
+	result.Transactions = transactions
+
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"msg":    "OK",
+		"result": result,
+	})
+}
+
 func NewWallet(c *gin.Context) {
 	var body model.CreateWalletRequest
 	if err := c.ShouldBindJSON(&body); err != nil {
