@@ -7,7 +7,7 @@ import (
 type NewMnemonicAndWalletResponse struct {
 	Mnemonic string `json:"mnemonic"`
 	Address  string `json:"address"`
-	Mark     string `json:"mark"`
+	Token    string `json:"token"`
 }
 
 type CreateWalletRequest struct {

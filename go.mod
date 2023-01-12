@@ -16,6 +16,7 @@ require (
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce // indirect
 	github.com/deckarep/golang-set v1.8.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
+	github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-ole/go-ole v1.2.1 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
@@ -24,8 +25,10 @@ require (
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/goccy/go-json v0.9.11 // indirect
+	github.com/golang-jwt/jwt/v4 v4.4.3 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/kataras/jwt v0.1.8 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect

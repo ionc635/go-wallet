@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	conf "lecture/go-wallet/config"
 	"lecture/go-wallet/db"
+	"lecture/go-wallet/jwt"
 	"lecture/go-wallet/model"
 	"lecture/go-wallet/rpc"
 	"lecture/go-wallet/scan"
@@ -45,20 +46,26 @@ func NewMnemonicAndWallet(c *gin.Context) {
 		return
 	}
 
+	// 패스워드 암호화
 	password := body.Password
 	hash := sha256.New()
 	hash.Write([]byte(password))
-
 	encryptdPw := hex.EncodeToString(hash.Sum(nil))
 
+	// seed 생성
 	entropy, _ := hdWallet.NewEntropy(128)
 
+	// 니모닉 생성
 	mnemonic, _ := hdWallet.NewMnemonicFromEntropy(entropy)
+
+	// 고유 ID 생성
 	hash.Write([]byte(encryptdPw + mnemonic))
 	mark := hex.EncodeToString(hash.Sum(nil))
 
+	// 지갑 생성
 	wallet, _ := hdWallet.NewFromMnemonic(mnemonic)
 
+	// coinType 확인
 	client := rpc.NewRpcClient()
 	// 이더리움 coin_type / main_net - 60, test_net - 1 /
 	var coinType int = 60
@@ -66,28 +73,34 @@ func NewMnemonicAndWallet(c *gin.Context) {
 		coinType = 1
 	}
 
+	// BIP44
 	path := hdWallet.MustParseDerivationPath("m/44'/" + fmt.Sprintf("%v", coinType) + "'/0'/0/0")
-
 	account, _ := wallet.Derive(path, true)
 
+	// privateKey, address 생성
+	privateKey, _ := wallet.PrivateKeyHex(account)
 	address := account.Address.Hex()
 
+	// INSERT
 	db := db.GetConnector()
-	dbResult, err := db.Exec("INSERT INTO test_db.key (password, mnemonic, mark) VALUES (?, hex(aes_encrypt(?, ?)), ?)", encryptdPw, mnemonic, password, mark)
+	dbResult, err := db.Exec("INSERT INTO test_db.key (password, mnemonic, mark) VALUES (?, hex(aes_encrypt(?, ?)), ?)", encryptdPw, mnemonic, mark, mark)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	insertId, _ := dbResult.LastInsertId()
-	_, err = db.Exec("INSERT INTO test_db.address (address, keyId) VALUES (?, ?)", address, insertId)
+	_, err = db.Exec("INSERT INTO test_db.address (address, privateKey, keyId, level, type) VALUES (?, hex(aes_encrypt(?, ?)), ?, ?, ?)", address, privateKey, mark, insertId, 0, coinType)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// 토큰 생성
+	token := jwt.CreateToken(mark)
+
 	var result model.NewMnemonicAndWalletResponse
 	result.Mnemonic = mnemonic
 	result.Address = address
-	result.Mark = mark
+	result.Token = token
 
 	c.IndentedJSON(http.StatusOK, gin.H{
 		"msg":    "OK",
