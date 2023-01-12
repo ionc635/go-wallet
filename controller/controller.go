@@ -96,6 +96,7 @@ func NewMnemonicAndWallet(c *gin.Context) {
 
 	// 토큰 생성
 	token := jwt.CreateToken(mark)
+	fmt.Println(mark)
 
 	var result model.NewMnemonicAndWalletResponse
 	result.Mnemonic = mnemonic
@@ -114,23 +115,27 @@ func SigninFromPassword(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	mark := c.Param("mark")
 
+	// 비밀번호 암호화
 	password := body.Password
 	hash := sha256.New()
 	hash.Write([]byte(password))
-
 	encryptdPw := hex.EncodeToString(hash.Sum(nil))
 
+	// 비밀번호와 mark가 일치하는지 확인
 	db := db.GetConnector()
 	var id int
-	err := db.QueryRow("SELECT (id) FROM test_db.key WHERE password = ? AND mark = ?", encryptdPw, body.Mark).Scan(&id)
+	err := db.QueryRow("SELECT (id) FROM test_db.key WHERE password = ? AND mark = ?", encryptdPw, mark).Scan(&id)
 
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{
 			"msg": "password is not vaild",
 		})
+		return
 	}
 
+	// Address 조회
 	var data string
 	var address []string
 	rows, err := db.Query("SELECT address FROM test_db.address WHERE keyId = ?", id)
@@ -149,9 +154,12 @@ func SigninFromPassword(c *gin.Context) {
 		address = append(address, data)
 	}
 
+	var result model.SigninFromPasswordResponse
+	result.Address = address
+
 	c.IndentedJSON(http.StatusOK, gin.H{
 		"msg":    "OK",
-		"result": address,
+		"result": result,
 	})
 }
 

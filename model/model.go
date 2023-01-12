@@ -74,7 +74,6 @@ type NewMnemonicRequest struct {
 
 type SigninFromPasswordRequest struct {
 	Password string `json:"password"`
-	Mark     string `json:"mark"`
 }
 
 type SigninFromMnemonicRequest struct {
@@ -84,4 +83,8 @@ type SigninFromMnemonicRequest struct {
 type SigninFromMnemonicResponse struct {
 	Address []string `json:"address"`
 	Mark    string   `json:"mark"`
+}
+
+type SigninFromPasswordResponse struct {
+	Address []string `json:"address"`
 }
